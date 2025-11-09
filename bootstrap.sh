@@ -1,27 +1,48 @@
 #!/usr/bin/env bash
 
-cd "$(dirname "${BASH_SOURCE}")";
+set -e
 
-git pull origin main;
+DOTFILES_DIR="$HOME/Projects/dotfiles"
 
-function doIt() {
-	rsync --exclude ".git/" \
-		--exclude ".DS_Store" \
-		--exclude ".osx" \
-		--exclude "bootstrap.sh" \
-		--exclude "README.md" \
-		--exclude "LICENSE-MIT.txt" \
-		-avh --no-perms . ~;
-	source ~/.bash_profile;
-}
+cd "$DOTFILES_DIR"
 
-if [ "$1" == "--force" -o "$1" == "-f" ]; then
-	doIt;
-else
-	read -p "This may overwrite existing files in your home directory. Are you sure? (y/n) " -n 1;
-	echo "";
-	if [[ $REPLY =~ ^[Yy]$ ]]; then
-		doIt;
-	fi;
-fi;
-unset doIt;
+echo "Pulling latest changes..."
+git pull origin main
+
+echo "Creating symlinks..."
+
+FILES=(
+  .aliases
+  .bash_profile
+  .bash_prompt
+  .bashrc
+  .curlrc
+  .editorconfig
+  .exports
+  .functions
+  .gitattributes
+  .gitconfig
+  .gitignore
+  .gdbinit
+  .gvimrc
+  .hushlogin
+  .inputrc
+  .screenrc
+  .tmux.conf
+  .vimrc
+  .wgetrc
+)
+
+for file in "${FILES[@]}"; do
+  ln -sfn "$DOTFILES_DIR/$file" "$HOME/$file"
+done
+
+# Link directories
+ln -sfn "$DOTFILES_DIR/.vim" "$HOME/.vim"
+ln -sfn "$DOTFILES_DIR/bin" "$HOME/bin"
+
+echo "Done ✅  Dotfiles successfully linked."
+echo "Reloading shell..."
+exec "$SHELL"
+
+
